@@ -1,0 +1,88 @@
+import tkinter as tk
+from tkinter import ttk
+import sqlite3
+import pandas as pd
+
+def consultar_dados():
+    dado_procurado = entrada_consulta.get()
+    consulta = f"""
+               SELECT *
+               FROM tabela_dados
+               WHERE Sistema LIKE '%{dado_procurado}%' OR
+                    EQUIPAMENTO LIKE '%{dado_procurado}%'  OR 
+                    PROTOCOLO LIKE '%{dado_procurado}%'    OR 
+                    MODELO LIKE '%{dado_procurado}%'       OR
+                    FABRICANTE LIKE '%{dado_procurado}%'   OR
+                    MEIO_FISICO LIKE  '%{dado_procurado}%' OR
+                    DESCRIÇÃO  LIKE   '%{dado_procurado}%' OR
+                    SUBSISTEMA LIKE '%{dado_procurado}%'
+               """
+    
+    # Conexão com o banco de dados SQLite3
+    conexao = sqlite3.connect('dados.db')
+
+    # Executar a consulta
+    df_consulta = pd.read_sql_query(consulta, conexao)
+
+    # Preencher a tabela com os resultados
+    preencher_tabela(df_consulta)
+
+    # Fechar a conexão
+    conexao.close()
+
+def preencher_tabela(df):
+    # Limpar a tabela
+    tabela.delete(*tabela.get_children())
+    
+    # Preencher a tabela com os resultados
+    for index, row in df.iterrows():
+        tabela.insert("", "end", text=index, values=list(row))
+
+# Criar a janela principal
+janela = tk.Tk()
+janela.title("Sistema de Gerenciamento")
+
+# Criar o notebook para as abas
+notebook = ttk.Notebook(janela)
+notebook.pack(fill=tk.BOTH, expand=True)
+
+# Primeira aba
+aba_cadastro = ttk.Frame(notebook)
+notebook.add(aba_cadastro, text="Cadastro")
+
+# Segunda aba
+aba_consulta = ttk.Frame(notebook)
+notebook.add(aba_consulta, text="Consulta")
+
+# Rótulo e entrada para a consulta
+rotulo_consulta = ttk.Label(aba_consulta, text="Consulta:")
+rotulo_consulta.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+
+entrada_consulta = ttk.Entry(aba_consulta)
+entrada_consulta.grid(row=0, column=1, padx=5, pady=5)
+
+botao_consultar = ttk.Button(aba_consulta, text="Consultar", command=consultar_dados)
+botao_consultar.grid(row=0, column=2, padx=5, pady=5)
+
+# Criar a tabela para mostrar os resultados
+tabela = ttk.Treeview(aba_consulta, columns=("Sistema", "Equipamento", "Protocolo", "Modelo", "Fabricante", "Meio Físico", "Descrição", "Subsistema"))
+tabela.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+# Configurar as colunas da tabela
+
+tabela.heading("Sistema", text="Sistema")
+tabela.heading("Equipamento", text="Equipamento")
+tabela.heading("Protocolo", text="Protocolo")
+tabela.heading("Modelo", text="Modelo")
+tabela.heading("Fabricante", text="Fabricante")
+tabela.heading("Meio Físico", text="Meio Físico")
+tabela.heading("Descrição", text="Descrição")
+tabela.heading("Subsistema", text="Subsistema")
+
+# Configurar as colunas da tabela para redimensionar com o conteúdo
+tabela.column("#0", stretch=tk.NO)
+for col in tabela["columns"]:
+    tabela.column(col, stretch=tk.YES)
+
+# Iniciar a interface
+janela.mainloop()
