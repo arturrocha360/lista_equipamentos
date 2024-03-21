@@ -1,0 +1,136 @@
+import tkinter as tk
+from tkinter import ttk
+import sqlite3
+import pandas as pd
+import openpyxl
+
+lista =[]
+
+def adiconar_equipamento():
+    
+    lista.append(tabela.selection())
+    
+    
+
+def consultar_dados():
+    dado_procurado = entrada_consulta.get()
+    consulta = f"""
+               SELECT *
+               FROM tabela_dados
+               WHERE Sistema LIKE '%{dado_procurado}%' OR
+                    EQUIPAMENTO LIKE '%{dado_procurado}%'  OR 
+                    PROTOCOLO LIKE '%{dado_procurado}%'    OR 
+                    MODELO LIKE '%{dado_procurado}%'       OR
+                    FABRICANTE LIKE '%{dado_procurado}%'   OR
+                    MEIO_FISICO LIKE  '%{dado_procurado}%' OR
+                    DESCRIÇÃO  LIKE   '%{dado_procurado}%' OR
+                    SUBSISTEMA LIKE '%{dado_procurado}%'
+               """
+    
+    # Conexão com o banco de dados SQLite3
+    conexao = sqlite3.connect('dados.db')
+
+    # Executar a consulta
+    global df_consulta
+    df_consulta = pd.read_sql_query(consulta, conexao)
+
+    # Preencher a tabela com os resultados
+    preencher_tabela(df_consulta)
+
+    # Fechar a conexão
+    conexao.close()
+
+def preencher_tabela(df):
+    # Limpar a tabela
+    tabela.delete(*tabela.get_children())
+    
+    # Preencher a tabela com os resultados
+    for index, row in df.iterrows():
+        tabela.insert("", "end", text=index, values=list(row))
+
+def gerar_excel_selecionados():
+    linhas_selecionadas = tabela.selection()
+    if linhas_selecionadas:
+        linhas_indices = [int(tabela.index(item)) for item in linhas_selecionadas]
+        df_selecionados = df_consulta.iloc[linhas_indices]
+        
+        # Criar um arquivo Excel com os dados selecionados
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Selecionados"
+        
+        for r, linha in enumerate(df_selecionados.values.tolist(), start=1):
+            for c, valor in enumerate(linha, start=1):
+                ws.cell(row=r, column=c, value=valor)
+        
+        # Salvar o arquivo Excel
+        wb.save("dados_selecionados.xlsx")
+        status_var.set("Arquivo Excel gerado com sucesso!")
+    else:
+        status_var.set("Nenhuma linha selecionada.")
+
+# Criar a janela principal
+janela = tk.Tk()
+janela.title("Sistema de Gerenciamento")
+
+# Criar o notebook para as abas
+notebook = ttk.Notebook(janela)
+notebook.pack(fill=tk.BOTH, expand=True)
+
+# Segunda aba
+aba_consulta = ttk.Frame(notebook)
+notebook.add(aba_consulta, text="Consulta")
+
+# Terceira aba
+aba_viw = ttk.Frame(notebook)
+notebook.add(aba_viw, text="Equipamentos")
+
+# Terceira aba
+aba_excel = ttk.Frame(notebook)
+notebook.add(aba_excel, text="Exportar Excel")
+
+
+# Rótulo e entrada para a consulta
+rotulo_consulta = ttk.Label(aba_consulta, text="Consulta:")
+rotulo_consulta.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+
+entrada_consulta = ttk.Entry(aba_consulta)
+entrada_consulta.grid(row=0, column=1, padx=5, pady=5)
+
+botao_consultar = ttk.Button(aba_consulta, text="Consultar", command=consultar_dados)
+botao_consultar.grid(row=0, column=2, padx=5, pady=5)
+
+
+botao_adicionar = ttk.Button(aba_consulta, text="Adicionar Equipamento", command=adiconar_equipamento)
+botao_adicionar.grid(row=0, column=3, padx=5, pady=5)
+
+# Criar a tabela para mostrar os resultados
+tabela = ttk.Treeview(aba_consulta, columns=("Sistema", "Subsistema","Equipamento", "Fabricante","Modelo","Meio Físico","Protocolo","Descrição"))
+tabela.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+# Configurar as colunas da tabela
+tabela.heading("Sistema", text="Sistema")
+tabela.heading("Subsistema", text="Subsistema")
+tabela.heading("Equipamento", text="Equipamento")
+tabela.heading("Fabricante", text="Fabricante")
+tabela.heading("Modelo", text="Modelo")
+tabela.heading("Meio Físico", text="Meio Físico")
+tabela.heading("Protocolo", text="Protocolo")
+tabela.heading("Descrição", text="Descrição")
+
+# Configurar as colunas da tabela para redimensionar com o conteúdo
+tabela.column("#0", stretch=tk.NO)
+for col in tabela["columns"]:
+    tabela.column(col, stretch=tk.YES)
+
+# Botão para gerar arquivo Excel com os dados selecionados
+botao_excel = ttk.Button(aba_excel, text="Gerar Excel", command=gerar_excel_selecionados)
+botao_excel.pack(padx=10, pady=10)
+
+# Variável de status para exibir mensagens
+status_var = tk.StringVar()
+status_label = ttk.Label(aba_excel, textvariable=status_var)
+status_label.pack(padx=10, pady=10)
+
+# Iniciar a interface
+janela.mainloop()

@@ -2,7 +2,7 @@ import pandas as pd
 import sqlite3
 
 
-arquivo = 'fullequipamento.xlsx'
+arquivo = 'dados_R01.xlsx'
 df = pd.read_excel(arquivo)
 
 # Conexão com o banco de dados SQLite3

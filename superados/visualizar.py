@@ -1,13 +1,13 @@
 import sqlite3
 
 # Conexão com o banco de dados SQLite3
-conexao = sqlite3.connect('Rede Operacional L89.db')
+conexao = sqlite3.connect('dados.db')
 
 # Cursor para executar comandos SQL
 cursor = conexao.cursor()
 
 # Consulta SQL para selecionar uma linha da tabela (pode ser qualquer consulta que selecione dados)
-consulta = "SELECT * FROM tabela_ip LIMIT 1"
+consulta = "SELECT * FROM tabela_dados LIMIT 1"
 
 # Executar a consulta
 cursor.execute(consulta)
