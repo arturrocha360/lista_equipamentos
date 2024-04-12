@@ -15,3 +15,4 @@ for i in range(len(SCL[0])):
         classificacao[chave][j].append(SCL[j][i])
 
 # Imprimir a classificação
+print(classificacao)

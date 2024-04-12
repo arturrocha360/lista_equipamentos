@@ -2,7 +2,7 @@ import sqlite3
 
 def ip_consulta(estacao, Descricao_Sistema):
     # Conexão com o banco de dados SQLite3
-    conexao = sqlite3.connect('Rede Operacional L89.db')
+    conexao = sqlite3.connect('dados.db')
 
     # Cursor para executar comandos SQL
     cursor = conexao.cursor()
